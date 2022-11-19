@@ -1,6 +1,7 @@
 import formidable from 'formidable';
 import path from 'path';
 import fs from 'fs/promises';
+import { prisma } from '../../db';
 
 export const config = {
   api: {
@@ -33,7 +34,17 @@ export default async function handler(req, res) {
     await fs.mkdir(path.join(process.cwd() + "/public", "/images"));
   }
 
-  await readFile(req, true);
+  const data = await readFile(req, true);
+  console.log(data);
+  const { nome, cpf, setor, cargo } = data.fields;
 
-  return res.status(200).json({ message: 'All done!' });
+  const newRecord = await prisma.registro.create({
+    data: {
+      nome, cpf, setor, cargo,
+      protocolo: `${nome.substring(0, 3).normalize("NFD").replace(/[\u0300-\u036f]/g, "")}${cpf.substring(0, 3)}-${Date.now().toString()}`,
+      foto: data.files.image.newFilename,
+    }
+  });
+
+  return res.status(200).json({ message: 'All done!', record: newRecord });
 }

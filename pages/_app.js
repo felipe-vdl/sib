@@ -6,7 +6,7 @@ function MyApp({ Component, pageProps }) {
     <Head>
       <title>Next.js File Storage</title>
     </Head>
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen">
       <header className="bg-slate-800 drop-shadow-md py-4 px-12">
         <nav>
           <ul>
@@ -14,7 +14,7 @@ function MyApp({ Component, pageProps }) {
           </ul>
         </nav>
       </header>
-      <main className="flex min-h-screen bg-slate-400">
+      <main className="flex h-full py-4 bg-slate-400">
         <Component {...pageProps} />
       </main>
     </div>

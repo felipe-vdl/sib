@@ -37,10 +37,10 @@ model Registro {
   cargo           String
   protocolo       String
   foto            String   @db.Text
-  cracha_frente   String   @db.Text
-  cracha_verso    String   @db.Text
-  user            User     @relation(fields: [user_id], references: [id])
-  user_id         Int
+  cracha_frente   String?   @db.Text
+  cracha_verso    String?   @db.Text
+  user            User?     @relation(fields: [user_id], references: [id])
+  user_id         Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
