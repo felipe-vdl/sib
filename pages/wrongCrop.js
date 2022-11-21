@@ -1,13 +1,25 @@
 import React, { useState } from "react";
 import path from 'path';
 import fs from 'fs/promises';
-
-import Link from 'next/link';
 import InputMask from 'react-input-mask';
+import Link from 'next/link';
+
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export default function Home({ dirs }) {
   const [uploading, setUploading] = useState(false);
   const [src, setSrc] = useState(null);
+  const [file, setFile] = useState(null);
+  const [result, setResult] = useState(null);
+  const [crop, setCrop] = useState({
+    unit: '%',
+    x: 0,
+    y: 0,
+    width: 75,
+    height: 100,
+  });
+  const [aspect, setAspect] = useState(3 / 4);
 
   const formInit = {
     nome: '',
@@ -20,7 +32,9 @@ export default function Home({ dirs }) {
   const handleUpload = async evt => {
     evt.preventDefault();
     try {
-      if (!src) return;
+      if (!file) return;
+      console.log(file);
+      return
 
       setUploading(true);
       const formData = new FormData();
@@ -54,8 +68,86 @@ export default function Home({ dirs }) {
 
   const handleFileChange = evt => {
     if (evt.target.files && evt.target.files.length > 0) {
+      setCrop(undefined);
       const file = evt.target.files[0];
+      setFile(file);
       setSrc(URL.createObjectURL(file));
+    }
+  }
+
+  const centerAspectCrop = (mediaWidth, mediaHeight, aspect) => {
+    return centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        aspect,
+        mediaWidth,
+        mediaHeight,
+      ),
+      mediaWidth,
+      mediaHeight,
+    )
+  }
+
+  const handleLoad = evt => {
+    const { width, height } = evt.currentTarget
+    setCrop(centerAspectCrop(width, height, aspect))
+  }
+
+  const getImageFromUrl = url =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener("load", () => resolve(image));
+      image.addEventListener("error", reject);
+      image.src = url;
+    });
+
+  const getBlobFromCanvas = (canvas, f) =>
+    new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) {
+          blob.name = f.name;
+          blob.lastModified = f.lastModified;
+          resolve(blob);
+        } else {
+          reject(new Error("Canvas is empty"));
+        }
+      }, f.type);
+    });
+
+  const getCroppedImg = async (imageUrl, f, c) => {
+    const image = await getImageFromUrl(imageUrl);
+
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    
+    const ctx = canvas.getContext('2d');
+    canvas.width = c.width;
+    canvas.height = c.height;
+
+    ctx.drawImage(
+      image,
+      c.x * scaleX,
+      c.y * scaleY,
+      c.width * scaleX,
+      c.height * scaleY,
+      0,
+      0,
+      c.width,
+      c.height
+    );
+
+    const data = await getBlobFromCanvas(canvas, f);
+    setResult(data);
+    console.log(data);
+  }
+
+  const handleComplete = crop => {
+    if (src && file && crop.width && crop.height) {
+      getCroppedImg(src, file, crop);
     }
   }
 
@@ -114,8 +206,13 @@ export default function Home({ dirs }) {
           </button>
         </div>
       </form>
+      {result &&
+        <div className="mx-auto w-1/2">
+          <img src={URL.createObjectURL(result)} alt='Cropped' />
+        </div>
+      }
       {/* Stored images */}
-      <div className="mx-auto mb-8 w-1/2 mt-8 flex flex-col space-y-4 bg-slate-700 rounded p-4">
+      {/* <div className="mx-auto mb-8 w-1/2 mt-8 flex flex-col space-y-4 bg-slate-700 rounded p-4">
         <p className='text-white text-xl text-center italic'>Storage: /public/images</p>
         {dirs.length > 0 && dirs.map((item) => (
           <Link
@@ -128,7 +225,7 @@ export default function Home({ dirs }) {
           </Link>
         ))}
         {dirs.length === 0 && <span className='text-red-200 text-center'>No files</span>}
-      </div>
+      </div> */}
     </div>
   )
 }

@@ -1,13 +1,29 @@
 import React, { useState } from "react";
 import path from 'path';
 import fs from 'fs/promises';
-
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import InputMask from 'react-input-mask';
+import cuid from 'cuid';
+
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export default function Home({ dirs }) {
   const [uploading, setUploading] = useState(false);
-  const [src, setSrc] = useState(null);
+  const [croppedImage, setCroppedImage] = useState();
+  const [selectedImage, setSelectedImage] = useState();
+  const [aspect, setAspect] = useState(3 / 4);
+  const router = useRouter();
+
+  const acceptedFileTypes = 'image/x-png, image/png, image/jpg, image/jpeg';
+  const [crop, setCrop] = useState({
+    unit: '%',
+    x: 0,
+    y: 0,
+    width: 75,
+    height: 100,
+  });
 
   const formInit = {
     nome: '',
@@ -20,7 +36,9 @@ export default function Home({ dirs }) {
   const handleUpload = async evt => {
     evt.preventDefault();
     try {
-      if (!src) return;
+      if (!croppedImage) return;
+      console.log(URL.createObjectURL(croppedImage));
+      return
 
       setUploading(true);
       const formData = new FormData();
@@ -39,8 +57,8 @@ export default function Home({ dirs }) {
       console.log(data);
 
       setForm(formInit);
-      setSrc(null);
-      setFile(null);
+      setCroppedImage();
+      setSelectedImage("");
       setUploading(false);
 
     } catch (error) {
@@ -52,11 +70,84 @@ export default function Home({ dirs }) {
     setForm(st => ({ ...st, [evt.target.name]: evt.target.value }));
   }
 
+  const centerAspectCrop = (mediaWidth, mediaHeight, aspect) => {
+    return centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        aspect,
+        mediaWidth,
+        mediaHeight,
+      ),
+      mediaWidth,
+      mediaHeight,
+    );
+  }
+
+  const onImageLoad = evt => {
+    const { width, height } = evt.currentTarget;
+    setCrop(centerAspectCrop(width, height, aspect));
+  }
+
   const handleFileChange = evt => {
     if (evt.target.files && evt.target.files.length > 0) {
+      setCrop(undefined);
       const file = evt.target.files[0];
-      setSrc(URL.createObjectURL(file));
+      setSelectedImage(URL.createObjectURL(file));
     }
+  }
+
+  const handleComplete = crop => {
+    if (selectedImage && crop.width && crop.height) {
+      getCroppedImg(selectedImage, crop);
+    }
+  }
+
+  const dataURLtoFile = (dataurl, filename) => {
+    let arr = dataurl.split(','),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    let newCroppedImage = new File([u8arr], filename, { type: mime });
+    setCroppedImage(newCroppedImage);
+  }
+
+  const getCroppedImg = (image, crop) => {
+    const canvas = document.createElement("canvas");
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    const ctx = canvas.getContext("2d");
+    let img = new Image;
+    img.src = image;
+
+    ctx.drawImage(
+      img,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width,
+      crop.height
+    );
+
+    const reader = new FileReader();
+    canvas.toBlob(blob => {
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        dataURLtoFile(reader.result, `${cuid()}-3x4.jpg`);
+      }
+    });
   }
 
   return (
@@ -87,19 +178,20 @@ export default function Home({ dirs }) {
           <label className="cursor-pointer bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded inline-block mx-auto text-white">
             Selecionar Foto
             <input required
-              accept="image/*"
+              accept={acceptedFileTypes}
               multiple={false}
               type="file"
               hidden
               onChange={handleFileChange}
             />
           </label>
-          {/* React Crop */}
           <div className="mx-auto lg:w-1/3 w-1/2 flex items-center justify-center border-2 border-dashed text-white p-2 rounded">
-            {src ? (
-              <ReactCrop keepSelection aspect={aspect} crop={crop} onComplete={handleComplete} onChange={(_, percentCrop) => setCrop(percentCrop)}>
-                <img src={src} onLoad={handleLoad} alt="Your selected image" />
-              </ReactCrop>
+            {selectedImage ? (
+              <>
+                <ReactCrop aspect={aspect} crop={crop} onComplete={handleComplete} onChange={(_, percentCrop) => setCrop(percentCrop)}>
+                  <img src={selectedImage} onLoad={onImageLoad} alt="Your selected image" />
+                </ReactCrop>
+              </>
             ) : (
               <span></span>
             )}

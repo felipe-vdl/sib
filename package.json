@@ -11,13 +11,17 @@
   "dependencies": {
     "@prisma/client": "^4.6.1",
     "autoprefixer": "^10.4.13",
+    "cuid": "^2.1.8",
     "eslint": "8.27.0",
     "eslint-config-next": "13.0.4",
     "formidable": "^2.0.1",
     "next": "13.0.4",
     "postcss": "^8.4.19",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-easy-crop": "^4.6.2",
+    "react-image-crop": "^10.0.8",
+    "react-input-mask": "^2.0.4"
   },
   "devDependencies": {
     "prisma": "^4.6.1",
