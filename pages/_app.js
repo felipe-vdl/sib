@@ -10,7 +10,7 @@ function MyApp({ Component, pageProps }) {
       <header className="bg-slate-800 drop-shadow-md py-4 px-12">
         <nav>
           <ul>
-            <li className="brand text-white text-2xl">Testing File Storage Systems</li>
+            <li className="brand text-white text-2xl">SIB</li>
           </ul>
         </nav>
       </header>

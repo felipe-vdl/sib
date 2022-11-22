@@ -1,13 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import path from 'path';
 import fs from 'fs/promises';
 
-import Link from 'next/link';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg, getRotatedImage } from '../utils/canvasUtils'
+import { getOrientation } from 'get-orientation/browser'
+import classes from '../styles/cropper.module.css';
 import InputMask from 'react-input-mask';
+import Link from 'next/link';
+
+let first = true;
+
+const ORIENTATION_TO_ANGLE = {
+  '3': 180,
+  '6': 90,
+  '8': -90,
+}
 
 export default function Home({ dirs }) {
   const [uploading, setUploading] = useState(false);
+
   const [src, setSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [rotation, setRotation] = useState(0)
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
+  const [croppedImage, setCroppedImage] = useState(null)
 
   const formInit = {
     nome: '',
@@ -39,12 +57,13 @@ export default function Home({ dirs }) {
       console.log(data);
 
       setForm(formInit);
-      setSrc(null);
-      setFile(null);
+      setSrc("");
+      setCroppedImage(null);
       setUploading(false);
 
     } catch (error) {
       console.log(error);
+      setUploading(false);
     }
   }
 
@@ -52,12 +71,54 @@ export default function Home({ dirs }) {
     setForm(st => ({ ...st, [evt.target.name]: evt.target.value }));
   }
 
-  const handleFileChange = evt => {
+  const handleFileChange = async evt => {
     if (evt.target.files && evt.target.files.length > 0) {
       const file = evt.target.files[0];
-      setSrc(URL.createObjectURL(file));
+      let imageDataUrl = await readFile(file);
+
+      // apply rotation if needed
+      const orientation = await getOrientation(file)
+      const rotation = ORIENTATION_TO_ANGLE[orientation]
+      if (rotation) {
+        imageDataUrl = await getRotatedImage(imageDataUrl, rotation)
+      }
+
+      setSrc(imageDataUrl);
     }
   }
+
+  const handleComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  function readFile(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(reader.result), false)
+      reader.readAsDataURL(file);
+    })
+  }
+
+  const showCroppedImage = useCallback(async () => {
+    try {
+      const croppedImage = await getCroppedImg(
+        src,
+        croppedAreaPixels,
+        rotation
+      )
+      setCroppedImage(croppedImage);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [src, croppedAreaPixels, rotation]);
+
+  useEffect(() => {
+    if (first) {
+      first = false;
+      return;
+    }
+    showCroppedImage();
+  }, [croppedAreaPixels]);
 
   return (
     <div className="flex flex-col m-auto mt-4 w-full bg-slate-400">
@@ -97,9 +158,21 @@ export default function Home({ dirs }) {
           {/* React Crop */}
           <div className="mx-auto lg:w-1/3 w-1/2 flex items-center justify-center border-2 border-dashed text-white p-2 rounded">
             {src ? (
-              <ReactCrop keepSelection aspect={aspect} crop={crop} onComplete={handleComplete} onChange={(_, percentCrop) => setCrop(percentCrop)}>
-                <img src={src} onLoad={handleLoad} alt="Your selected image" />
-              </ReactCrop>
+              <>
+                <div className={classes.cropContainer}>
+                  <Cropper
+                    image={src}
+                    crop={crop}
+                    rotation={rotation}
+                    zoom={zoom}
+                    aspect={3 / 4}
+                    onCropChange={setCrop}
+                    onRotationChange={setRotation}
+                    onZoomChange={setZoom}
+                    onCropComplete={handleComplete}
+                  />
+                </div>
+              </>
             ) : (
               <span></span>
             )}
@@ -115,8 +188,13 @@ export default function Home({ dirs }) {
         </div>
       </form>
       {/* Stored images */}
-      <div className="mx-auto mb-8 w-1/2 mt-8 flex flex-col space-y-4 bg-slate-700 rounded p-4">
+      {/* <div className="mx-auto mb-8 w-1/2 mt-8 flex flex-col space-y-4 bg-slate-700 rounded p-4">
         <p className='text-white text-xl text-center italic'>Storage: /public/images</p>
+        {croppedImage && 
+          <div>
+            <img src={URL.createObjectURL(croppedImage)} />
+          </div>
+        }
         {dirs.length > 0 && dirs.map((item) => (
           <Link
             target="_blank"
@@ -128,7 +206,7 @@ export default function Home({ dirs }) {
           </Link>
         ))}
         {dirs.length === 0 && <span className='text-red-200 text-center'>No files</span>}
-      </div>
+      </div> */}
     </div>
   )
 }

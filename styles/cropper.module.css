@@ -1,0 +1,29 @@
+.cropContainer {
+  position: relative;
+  width: 100vw;
+  height: 38vh;
+}
+
+@media screen and (min-width: 1201px) and (max-width: 1536px) {
+  .cropContainer {
+    height: 32vh;
+  }
+}
+
+@media screen and (min-width: 900px) and (max-width: 1200px) {
+  .cropContainer {
+    height: 35vh;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 899px) {
+  .cropContainer {
+    height: 28vh;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .cropContainer {
+    height: 18vh;
+  }
+}
