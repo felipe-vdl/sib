@@ -12,7 +12,7 @@ export const config = {
 const readFile = (req, saveLocally) => {
   const options = {};
   if (saveLocally) {
-    options.uploadDir = path.join(process.cwd(), "/public/images");
+    options.uploadDir = path.join(process.cwd(), "/storage/images");
     options.filename = (name, ext, path, form) => {
       return `${Date.now().toString()}_${Math.floor(Math.random() * 10001)}_${path.originalFilename}`;
     }
@@ -29,9 +29,10 @@ const readFile = (req, saveLocally) => {
 
 export default async function handler(req, res) {
   try {
-    await fs.readdir(path.join(process.cwd() + "/public", "/images"));
+    await fs.readdir(path.join(process.cwd() + "/storage", "/images"));
   } catch (error) {
-    await fs.mkdir(path.join(process.cwd() + "/public", "/images"));
+    await fs.mkdir(path.join(process.cwd(), "/storage"));
+    await fs.mkdir(path.join(process.cwd() + "/storage", "/images"));
   }
 
   const data = await readFile(req, true);
