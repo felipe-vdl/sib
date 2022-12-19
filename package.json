@@ -8,9 +8,13 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
     "@prisma/client": "^4.6.1",
     "autoprefixer": "^10.4.13",
+    "bcrypt": "^5.1.0",
     "cuid": "^2.1.8",
     "eslint": "8.27.0",
     "eslint-config-next": "13.0.4",
@@ -18,6 +22,7 @@
     "get-orientation": "^1.1.2",
     "jimp": "^0.16.2",
     "next": "13.0.4",
+    "next-auth": "^4.18.6",
     "postcss": "^8.4.19",
     "react": "18.2.0",
     "react-dom": "18.2.0",

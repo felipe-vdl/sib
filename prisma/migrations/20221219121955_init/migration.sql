@@ -6,7 +6,7 @@ CREATE TABLE `users` (
     `name` VARCHAR(191) NOT NULL,
     `role` ENUM('USER', 'ADMIN', 'SUPERADMIN') NOT NULL DEFAULT 'USER',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NULL,
 
     UNIQUE INDEX `users_email_key`(`email`),
     PRIMARY KEY (`id`)
@@ -21,14 +21,8 @@ CREATE TABLE `registros` (
     `cargo` VARCHAR(191) NOT NULL,
     `protocolo` VARCHAR(191) NOT NULL,
     `foto` TEXT NOT NULL,
-    `cracha_frente` TEXT NOT NULL,
-    `cracha_verso` TEXT NOT NULL,
-    `user_id` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `updatedAt` DATETIME(3) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- AddForeignKey
-ALTER TABLE `registros` ADD CONSTRAINT `registros_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

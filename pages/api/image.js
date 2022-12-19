@@ -36,13 +36,12 @@ export default async function handler(req, res) {
   }
 
   const data = await readFile(req, true);
-  console.log(data);
   const { nome, cpf, setor, cargo } = data.fields;
 
   const newRecord = await prisma.registro.create({
     data: {
       nome, cpf, setor, cargo,
-      protocolo: `${nome.substring(0, 3).normalize("NFD").replace(/[\u0300-\u036f]/g, "")}${cpf.substring(0, 3)}-${Date.now().toString()}`,
+      protocolo: `${nome.substring(0, 3).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()}${cpf.substring(0, 3)}-${Math.floor(Math.random() * 999999)}`,
       foto: data.files.image.newFilename,
     }
   });
