@@ -5,6 +5,10 @@ import prisma from '../../../db';
 import bcrypt from 'bcrypt';
 
 export const authOptions = {
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       authorize: async (credentials, req) => {

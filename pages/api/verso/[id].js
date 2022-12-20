@@ -1,4 +1,4 @@
-import { prisma } from '../../../db';
+import prisma from '../../../db';
 import Jimp from 'jimp';
 import path from 'path';
 

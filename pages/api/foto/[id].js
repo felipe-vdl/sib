@@ -1,4 +1,4 @@
-import { prisma } from '../../../db';
+import prisma from '../../../db';
 import path from 'path';
 import fs from 'fs/promises';
 

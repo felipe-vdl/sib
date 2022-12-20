@@ -1,7 +1,7 @@
 import formidable from 'formidable';
 import path from 'path';
 import fs from 'fs/promises';
-import { prisma } from '../../db';
+import prisma from '../../db';
 
 export const config = {
   api: {
@@ -40,7 +40,10 @@ export default async function handler(req, res) {
 
   const newRecord = await prisma.registro.create({
     data: {
-      nome, cpf, setor, cargo,
+      nome: nome.toUpperCase(),
+      cpf,
+      setor: setor.toUpperCase(),
+      cargo: cargo.toUpperCase(),
       protocolo: `${nome.substring(0, 3).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()}${cpf.substring(0, 3)}-${Math.floor(Math.random() * 999999)}`,
       foto: data.files.image.newFilename,
     }
