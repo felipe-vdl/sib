@@ -3,6 +3,7 @@ import { SessionProvider } from 'next-auth/react';
 
 import '../styles/globals.css'
 import Navbar from '../components/ui/Navbar';
+import LoadingProvider from '../components/ui/LoadingProvider';
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -14,8 +15,10 @@ function MyApp({ Component, pageProps }) {
         <header className="bg-slate-800 drop-shadow-md py-4 px-12">
           <Navbar />
         </header>
-        <main className="flex h-full py-4 bg-slate-400">
-          <Component {...pageProps} />
+        <main className="flex items-start h-full py-4 bg-slate-400">
+          <LoadingProvider>
+            <Component {...pageProps} />
+          </LoadingProvider>
         </main>
       </div>
     </SessionProvider>
